@@ -65,61 +65,29 @@ public class LonelyIsland implements Runnable{
                 path.subList(initialSize, path.size()).clear();
             }
             if(source.getNextIsland(i)==dest){
-                path.add(dest.getID());
-                System.out.println(path);
+                if(dest.getVisitStatus()==3){
+                    boolean isComplete=false;
+                    int j=0;
+                    while(j<dest.getSize()&&!isComplete){
+                        if(path.contains(dest.getNextIsland(j).getID())){
+                            isComplete=true;
+                        }else{
+                            j++;
+                        }
+                    }
+                    if(isComplete){
+                        path.add(dest.getID());
+                        System.out.println(path);
+                    }
+                }else{
+                    path.add(dest.getID());
+                    System.out.println(path);
+                }
             }else if(!visited[source.getNextIsland(i).getID()-1]&&source.getNextIsland(i)!=dest){
                 printPath(source.getNextIsland(i), dest, path, visited);
             }
         }
         visited[source.getID()-1]=false;
-    }
-
-    public void findSink(Set<Integer> sinkIsland,island currentIsland,ArrayList<Integer> path){//mencari trap island
-        currentIsland.setVisitStatus(1);//set status menjadi sedang dikunjungi
-        int size=currentIsland.getSize();
-        int childStatus=2;//default=2
-        path.add(currentIsland.getID());
-        int initialSize=path.size();
-        // System.out.println(initialSize);
-        // System.out.println(path);
-        if (size==0){
-            sinkIsland.add(currentIsland.getID());
-            System.out.println(path);
-        }else if (size==1){//tetangga hanya satu
-            if(currentIsland.getNextIsland(0).getVisitStatus()==0||currentIsland.getNextIsland(0).getVisitStatus()==3){//boleh divisit
-                findSink(sinkIsland, currentIsland.getNextIsland(0),path);
-                childStatus=currentIsland.getNextIsland(0).getVisitStatus();
-            }else if(currentIsland.getNextIsland(0).getVisitStatus()==1){//parent blm selesai divisit
-                sinkIsland.add(currentIsland.getID());
-                childStatus=3;
-                System.out.println(path);
-            }
-            if(initialSize<path.size()){
-                path.subList(initialSize, path.size()).clear();
-            }
-        }else{
-            boolean canTravel=false;
-            for(int i=0;i<currentIsland.getSize();i++){
-                if(currentIsland.getNextIsland(i).getVisitStatus()==0||currentIsland.getNextIsland(i).getVisitStatus()==3){//kunjungi yang blm dikunjungi
-                    canTravel=true;
-                    findSink(sinkIsland, currentIsland.getNextIsland(i),path);
-                }else if(currentIsland.getNextIsland(i).getVisitStatus()==2){
-                    canTravel=true;
-                }
-                if(currentIsland.getNextIsland(i).getVisitStatus()==3){
-                    childStatus=3;
-                }
-                if(initialSize<path.size()){
-                    path.subList(initialSize, path.size()).clear();
-                }
-            }
-            if(!canTravel){//jika punya banyak tetangga tapi tidak bisa travel, berarti dia bagian siklik
-                sinkIsland.add(currentIsland.getID());
-                childStatus=3;
-                System.out.println(path);
-            }
-        }
-        currentIsland.setVisitStatus(childStatus);//set status sesuai childnya
     }
 
     public static void main(String[] args) throws Exception {//buat thread baru agar tidak stackoverflow
@@ -160,21 +128,15 @@ public class LonelyIsland implements Runnable{
         System.out.println("Baca file selesai");
         visitStatus=new boolean[n_island];
         long startTime = System.nanoTime();//catat waktu awal
-        // findSink(tempResult,islands.get(cur_island-1));
-        // result=new ArrayList<Integer>(tempResult);
-        // Collections.sort(result);
-        // System.out.println("Pulau yang membuat terjebak :");
-        // System.out.println(result);
-        // System.out.println("Semua path yang mungkin :");
-        // for(int i=0;i<result.size();i++){//
-        //     printPath(islands.get(cur_island-1), islands.get(result.get(i)-1),new ArrayList<Integer>(),visitStatus);
-        // }
-        System.out.println("Semua path yang mungkin :");
-        findSink(tempResult,islands.get(cur_island-1),new ArrayList<Integer>());
+        findSink(tempResult,islands.get(cur_island-1));
         result=new ArrayList<Integer>(tempResult);
         Collections.sort(result);
         System.out.println("Pulau yang membuat terjebak :");
         System.out.println(result);
+        System.out.println("Semua path yang mungkin :");
+        for(int i=0;i<result.size();i++){//
+            printPath(islands.get(cur_island-1), islands.get(result.get(i)-1),new ArrayList<Integer>(),visitStatus);
+        }
         long endTime = System.nanoTime();//catat waktu akhir
         System.out.println("Total waktu eksekusi : "+(endTime-startTime)/1000000+" ms");
         System.exit(0);
